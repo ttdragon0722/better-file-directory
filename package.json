@@ -1,15 +1,22 @@
 {
     "name": "better-file-directory",
-    "displayName": "Better-File-Directory",
+    "displayName": "Better File Directory",
     "description": "Visually manage your files with large thumbnails. Move files easily between folders using a modern grid view.",
     "publisher": "ttdragon0722",
     "icon": "icon.png",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "engines": {
         "vscode": "^1.90.0"
     },
     "categories": [
+        "Visualization",
         "Other"
+    ],
+    "keywords": [
+        "explorer",
+        "file-manager",
+        "directory",
+        "tree-view"
     ],
     "activationEvents": [
         "onCommand:better-file-directory.current",
@@ -33,7 +40,6 @@
                 "title": "Open Folder View...",
                 "category": "Better File Directory"
             },
-            
             {
                 "command": "better-file-directory.split",
                 "title": "Split File Directory"
