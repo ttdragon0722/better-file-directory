@@ -4,6 +4,7 @@
 
 **Better File Directory** 是一款為 VS Code 打造的現代化視覺檔案管理擴充功能。它將傳統的列表清單替換為直觀的 **網格佈局 (Grid Layout)**，結合大型縮圖與精緻的 **Material Design 圖示**，讓開發者在管理專案資產與視覺化整理檔案時更加輕鬆高效。
 
+![Explorer](./Explorer.png)
 ![Demo](DEMO.png)
 
 ---

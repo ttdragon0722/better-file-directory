@@ -40,6 +40,9 @@ function createPanel(context: vscode.ExtensionContext, folderUri: vscode.Uri, vi
       localResourceRoots: [vscode.Uri.file(path.parse(folderUri.fsPath).root)]
     }
   );
+
+  panel.iconPath = new vscode.ThemeIcon('layout');
+
   handleWebviewMessage(panel, context);
   updateWebviewContent(panel, folderUri);
 }

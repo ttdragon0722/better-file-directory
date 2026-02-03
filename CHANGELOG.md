@@ -2,6 +2,9 @@
 
 All notable changes to the "Better-File-Directory" extension will be documented in this file.
 
+## [0.0.9] - 2026-02-04
+- View Title Icon: Fixed a syntax issue in package.json that prevented the "Open Better File View" icon ($(layout)) from appearing in the Explorer title bar.
+
 ## [0.0.8] - 2026-02-03
 - readme mistake
 
