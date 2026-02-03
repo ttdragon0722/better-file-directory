@@ -4,6 +4,8 @@
 
 **Better File Directory** is a modern visual file management extension for VS Code. It replaces the standard list view with an intuitive **Grid Layout**, featuring large thumbnails and rich **Material Design icons**, making it easier for developers to manage project assets and organize files visually.
 
+![DEMO](./DEMO.png)
+
 ---
 
 ## ✨ Key Features
