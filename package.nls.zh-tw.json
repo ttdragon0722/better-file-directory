@@ -1,0 +1,10 @@
+{
+    "extension.displayName": "Better File Directory (視覺化檔案管理)",
+    "extension.description": "使用大型縮圖視覺化管理您的檔案。透過現代化的網格視圖在資料夾之間輕鬆移動檔案。",
+    "command.current.title": "開啟當前資料夾網格視圖",
+    "command.open.title": "選擇並開啟資料夾...",
+    "command.split.title": "開啟分割視窗",
+    "config.customFolderIcons.description": "將特定的資料夾名稱映射至 Material Design 圖示 (例如：\"my-api\": \"folder-api\")。",
+    "config.customFileIcons.description": "將特定的完整檔案名稱映射至圖示 (例如：\"webpack.config.js\": \"webpack\")。",
+    "config.customExtensionIcons.description": "將副檔名映射至圖示 (例如：\"jsx\": \"react\")。"
+}

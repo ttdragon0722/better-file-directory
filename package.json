@@ -1,10 +1,12 @@
 {
     "name": "better-file-directory",
-    "displayName": "Better File Directory",
-    "description": "Visually manage your files with large thumbnails. Move files easily between folders using a modern grid view.",
+    "displayName": "%extension.displayName%",
+    "description": "%extension.description%",
     "publisher": "ttdragon0722",
+    "author": "Rex Lai",
+    "license": "MIT",
     "icon": "icon.png",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "engines": {
         "vscode": "^1.90.0"
     },
@@ -32,17 +34,17 @@
         "commands": [
             {
                 "command": "better-file-directory.current",
-                "title": "View Current Folder",
+                "title": "%command.current.title%",
                 "category": "Better File Directory"
             },
             {
                 "command": "better-file-directory.open",
-                "title": "Open Folder View...",
+                "title": "%command.open.title%",
                 "category": "Better File Directory"
             },
             {
                 "command": "better-file-directory.split",
-                "title": "Split File Directory"
+                "title": "%command.split.title%"
             }
         ],
         "menus": {
@@ -60,17 +62,17 @@
                 "better-file-directory.customFolderIcons": {
                     "type": "object",
                     "default": {},
-                    "description": "Map specific folder names to Material Design icons (e.g., \"my-api\": \"folder-api\")."
+                    "description": "%config.customFolderIcons.description%"
                 },
                 "better-file-directory.customFileIcons": {
                     "type": "object",
                     "default": {},
-                    "description": "Map specific full filenames to icons (e.g., \"webpack.config.js\": \"webpack\")."
+                    "description": "%config.customFileIcons.description%"
                 },
                 "better-file-directory.customExtensionIcons": {
                     "type": "object",
                     "default": {},
-                    "description": "Map file extensions to icons (e.g., \"jsx\": \"react\")."
+                    "description": "%config.customExtensionIcons.description%"
                 }
             }
         },

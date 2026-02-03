@@ -1,0 +1,10 @@
+{
+    "extension.displayName": "Better File Directory",
+    "extension.description": "Visually manage your files with large thumbnails. Move files easily between folders using a modern grid view.",
+    "command.current.title": "View Current Folder",
+    "command.open.title": "Open Folder View...",
+    "command.split.title": "Split File Directory",
+    "config.customFolderIcons.description": "Map specific folder names to Material Design icons (e.g., \"my-api\": \"folder-api\").",
+    "config.customFileIcons.description": "Map specific full filenames to icons (e.g., \"webpack.config.js\": \"webpack\").",
+    "config.customExtensionIcons.description": "Map file extensions to icons (e.g., \"jsx\": \"react\")."
+}

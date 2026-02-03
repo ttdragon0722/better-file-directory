@@ -1,43 +1,44 @@
-Change Log
+# Change Log
 
 All notable changes to the "Better-File-Directory" extension will be documented in this file.
 
-[0.0.5] - 2026-02-03
+## [0.0.7] - 2026-02-03
 
-Added
+### Added
+- **Multi-language Support (i18n)**: Added `package.nls.json` and `package.nls.zh-tw.json` to support both English and Traditional Chinese interfaces.
+- **Improved Documentation**: Fully revamped `README.md` (English) and added `README.zh-TW.md` (Traditional Chinese) for a better user onboarding experience.
+- **Legal Compliance**: Added a formal `LICENSE` file (MIT License).
 
-File Management: Added context menu options to Create New File and Create New Folder.
+### Fixed
+- **SEO & Metadata**: Optimized `package.json` keywords, description, and categories to improve visibility on the VS Code Marketplace.
+- **Package Metadata**: Updated explicit license and publisher fields.
 
-Delete Functionality: Added support for deleting files/folders via the context menu or the Delete key (moves to trash with confirmation).
+## [0.0.6] - 2026-02-03
 
-Split View Support: Pressing Ctrl + \ (or Cmd + \ on Mac) now correctly opens a duplicate file view in a split window.
+### Fixed
+- **SEO Optimization**: Optimized description and keywords (`explorer`, `file-manager`, `directory-view`) for better indexing.
 
-Custom Icon Configuration: Users can now customize icons via settings.json using customFolderIcons, customFileIcons, and customExtensionIcons.
+## [0.0.5] - 2026-02-03
 
-Fixed
+### Added
+- **File Management**: Added context menu options to Create New File and Create New Folder.
+- **Delete Functionality**: Added support for deleting files/folders via context menu or Delete key.
+- **Split View Support**: Added `Ctrl + \` shortcut to open a duplicate file view in a split window.
+- **Custom Icon Configuration**: Supported `customFolderIcons`, `customFileIcons`, and `customExtensionIcons` in settings.
 
-State Restoration: Fixed an issue where split views or restored windows would be empty. The extension now correctly serializes and restores the directory state.
+### Fixed
+- **State Restoration**: Fixed an issue where restored windows would be empty; added state serialization.
 
-[0.0.4] - 2026-02-01
+## [0.0.4] - 2026-02-01
 
-Added
+### Added
+- **Drag & Drop Support**: Drag files to other windows or drop within the view to duplicate.
+- **Clipboard Integration**: Support for `Ctrl+C` (Copy) and `Ctrl+V` (Paste).
+- **Material Design Icons**: Integrated rich visual icons.
 
-Drag & Drop Support: You can now drag files from the grid view to other windows or drop them within the view to duplicate them.
+### Changed
+- **Compatibility**: Lowered minimum VS Code version to `^1.90.0`.
 
-Clipboard Integration: Support for Ctrl+C (Copy) and Ctrl+V (Paste) to manage files quickly.
+## [0.0.1] - 2025-12-19
 
-Material Design Icons: Integrated rich file icons for better visual recognition.
-
-Smart Fallback: Added a robust fallback mechanism for folder icons (yellow folder) to prevent broken images.
-
-Changed
-
-Compatibility: Lowered the minimum required VS Code version to ^1.90.0 to support more users.
-
-Performance: Optimized the Webview loading speed and icon rendering logic.
-
-[0.0.1] - Initial Release
-
-Basic functionality to view directory contents as large thumbnails.
-
-Support for navigating through folders.
+- Initial Release: Basic grid-based directory navigation.
