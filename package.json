@@ -6,7 +6,7 @@
   "author": "Rex Lai",
   "license": "MIT",
   "icon": "icon.png",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -46,6 +46,18 @@
       {
         "command": "better-file-directory.split",
         "title": "Split File Directory"
+      },
+      {
+        "command": "better-file-directory.openFavorite",
+        "title": "Open Favorite Folder...",
+        "category": "Better File Directory",
+        "icon": "$(star)"
+      },
+      {
+        "command": "better-file-directory.addFavorite",
+        "title": "Add to Favorites",
+        "category": "Better File Directory",
+        "icon": "$(plus)"
       }
     ],
     "menus": {
@@ -60,27 +72,53 @@
         {
           "command": "better-file-directory.current",
           "when": "explorerResourceIsFolder",
-          "group": "navigation"
+          "group": "navigation@1"
+        },
+        {
+          "command": "better-file-directory.addFavorite",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@2"
         }
       ]
     },
     "configuration": {
       "title": "Better File Directory",
       "properties": {
+        "better-file-directory.favoriteFolders": {
+          "type": "object",
+          "description": "Configure favorite folders. (Key: Name, Value: Path)",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Full path to the folder"
+          },
+          "default": {}
+        },
         "better-file-directory.customFolderIcons": {
           "type": "object",
-          "default": {},
-          "description": "Map specific folder names to Material Design icons (e.g., \"my-api\": \"folder-api\")."
+          "description": "Map specific folder names to icons. (Key: Folder Name, Value: Icon Name)",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Icon name (e.g. folder-api)"
+          },
+          "default": {}
         },
         "better-file-directory.customFileIcons": {
           "type": "object",
-          "default": {},
-          "description": "Map specific full filenames to icons (e.g., \"webpack.config.js\": \"webpack\")."
+          "description": "Map specific filenames to icons. (Key: Filename, Value: Icon Name)",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Icon name (e.g. webpack)"
+          },
+          "default": {}
         },
         "better-file-directory.customExtensionIcons": {
           "type": "object",
-          "default": {},
-          "description": "Map file extensions to icons (e.g., \"jsx\": \"react\")."
+          "description": "Map extensions to icons. (Key: Extension, Value: Icon Name)",
+          "additionalProperties": {
+            "type": "string",
+            "description": "Icon name (e.g. react)"
+          },
+          "default": {}
         }
       }
     }

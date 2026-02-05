@@ -2,6 +2,15 @@
 
 All notable changes to the "Better-File-Directory" extension will be documented in this file.
 
+## [0.0.10] - 2026-02-05
+### Changed
+- **Settings UI Upgrade**: Refactored configuration settings (favoriteFolders, customFolderIcons, etc.) to use a Key-Value Map structure. This enables the native "Add Item" interface in VS Code Settings, making it much easier to add and manage paths/icons without editing JSON manually.
+- **Command Enhancement**: The better-file-directory.open command now supports passing a URI or string argument, allowing for integration with keybindings or other automation tools.
+
+### Add
+- **Smart Notifications**: Added an "Open Now" action button to the notification that appears after successfully adding a new favorite folder.
+- **Workspace Support**: The View Current Folder command now supports Multi-root Workspaces. If multiple folders are open, a QuickPick menu allows you to choose which one to view.
+
 ## [0.0.9] - 2026-02-04
 - View Title Icon: Fixed a syntax issue in package.json that prevented the "Open Better File View" icon ($(layout)) from appearing in the Explorer title bar.
 

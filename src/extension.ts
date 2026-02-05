@@ -8,27 +8,163 @@ const viewType = 'betterFileDirectory';
 let clipboardSourcePath: string | undefined = undefined;
 
 export function activate(context: vscode.ExtensionContext) {
-  // *** 關鍵修改：將 context 傳入 Serializer ***
   context.subscriptions.push(
     vscode.window.registerWebviewPanelSerializer(viewType, new BetterFileDirectorySerializer(context))
   );
 
-  let currentCmd = vscode.commands.registerCommand('better-file-directory.current', async () => {
-    let targetUri = vscode.workspace.workspaceFolders?.[0]?.uri || vscode.Uri.file(os.homedir());
-    createPanel(context, targetUri);
+  // *** 修改：增強版 current 指令 ***
+  // 1. 支援右鍵選單傳入 uri
+  // 2. 支援多工作區選擇 (Multi-root Workspaces)
+  let currentCmd = vscode.commands.registerCommand('better-file-directory.current', async (uri?: vscode.Uri) => {
+    let targetUri: vscode.Uri | undefined;
+
+    if (uri && uri instanceof vscode.Uri) {
+        // 情境 A: 從側邊欄檔案總管按右鍵觸發 -> 直接開啟選中的資料夾
+        targetUri = uri;
+    } else {
+        // 情境 B: 從標題列按鈕或 Command Palette 觸發
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            // 沒有開啟任何資料夾 -> 預設開啟家目錄
+            targetUri = vscode.Uri.file(os.homedir());
+        } else if (workspaceFolders.length === 1) {
+            // 只有一個工作區 -> 直接開啟
+            targetUri = workspaceFolders[0].uri;
+        } else {
+            // 多個工作區 -> 跳出選單讓使用者選擇
+            const items = workspaceFolders.map(folder => ({
+                label: `$(root-folder) ${folder.name}`,
+                description: folder.uri.fsPath,
+                uri: folder.uri
+            }));
+
+            const selected = await vscode.window.showQuickPick(items, {
+                placeHolder: 'Select a workspace folder to view'
+            });
+
+            if (selected) {
+                targetUri = selected.uri;
+            }
+        }
+    }
+
+    if (targetUri) {
+        createPanel(context, targetUri);
+    }
   });
 
-  let openCmd = vscode.commands.registerCommand('better-file-directory.open', async () => {
-    const folders = await vscode.window.showOpenDialog({
-      canSelectFiles: false, canSelectFolders: true, openLabel: 'Select Folder'
+  let openCmd = vscode.commands.registerCommand('better-file-directory.open', async (arg?: vscode.Uri | string) => {
+    let targetUri: vscode.Uri | undefined;
+
+    if (arg instanceof vscode.Uri) {
+        targetUri = arg;
+    } else if (typeof arg === 'string') {
+        targetUri = vscode.Uri.file(arg);
+    } else {
+        const folders = await vscode.window.showOpenDialog({
+            canSelectFiles: false, canSelectFolders: true, openLabel: 'Select Folder'
+        });
+        if (folders?.[0]) targetUri = folders[0];
+    }
+
+    if (targetUri) {
+        createPanel(context, targetUri);
+    }
+  });
+
+  // 開啟常用資料夾指令
+  let openFavCmd = vscode.commands.registerCommand('better-file-directory.openFavorite', async () => {
+    const config = vscode.workspace.getConfiguration('better-file-directory');
+    
+    // 讀取設定 (Map 格式: { "Label": "Path" })
+    const favorites = config.get<{[key: string]: string}>('favoriteFolders') || {};
+    
+    // 將 Object 轉為 QuickPick 項目
+    const items = Object.keys(favorites).map(label => ({
+        label: `$(star) ${label}`,
+        description: favorites[label],
+        path: favorites[label]
+    }));
+
+    if (items.length === 0) {
+        const choice = await vscode.window.showInformationMessage(
+            'No favorite folders configured yet.', 
+            'Add Favorite',
+            'Cancel'
+        );
+        if (choice === 'Add Favorite') {
+            vscode.commands.executeCommand('better-file-directory.addFavorite');
+        }
+        return;
+    }
+
+    const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: 'Select a favorite folder to open'
     });
-    if (folders?.[0]) createPanel(context, folders[0]);
+
+    if (selected && selected.path) {
+        createPanel(context, vscode.Uri.file(selected.path));
+    }
   });
 
-  context.subscriptions.push(currentCmd, openCmd);
+  // 加入常用資料夾指令
+  let addFavCmd = vscode.commands.registerCommand('better-file-directory.addFavorite', async (uri?: vscode.Uri) => {
+    let targetPath = '';
+    let defaultLabel = '';
+
+    if (uri && uri.fsPath) {
+        targetPath = uri.fsPath;
+        defaultLabel = path.basename(targetPath);
+    } else {
+        const folders = await vscode.window.showOpenDialog({
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            openLabel: 'Select Folder to Favorite'
+        });
+        if (!folders || folders.length === 0) return;
+        targetPath = folders[0].fsPath;
+        defaultLabel = path.basename(targetPath);
+    }
+
+    const label = await vscode.window.showInputBox({
+        prompt: 'Enter a name for this favorite folder',
+        placeHolder: 'e.g. My Project',
+        value: defaultLabel
+    });
+
+    if (!label) return;
+
+    try {
+        const config = vscode.workspace.getConfiguration('better-file-directory');
+        
+        // 1. 取得目前的物件設定 (Map)
+        const currentFavorites = { ...config.get<{[key: string]: string}>('favoriteFolders') };
+        
+        // 2. 直接以 Key-Value 方式新增或更新
+        currentFavorites[label] = targetPath;
+
+        // 3. 寫入設定
+        await config.update('favoriteFolders', currentFavorites, vscode.ConfigurationTarget.Global);
+        
+        const selection = await vscode.window.showInformationMessage(
+            `Folder '${label}' added to favorites!`,
+            'Open Now'
+        );
+
+        if (selection === 'Open Now') {
+            createPanel(context, vscode.Uri.file(targetPath));
+        }
+
+    } catch (error) {
+        vscode.window.showErrorMessage(`Failed to save favorite: ${error}`);
+    }
+  });
+
+  context.subscriptions.push(currentCmd, openCmd, openFavCmd, addFavCmd);
 }
 
-// *** 修改：加入 viewColumn 參數 (預設為 Active) ***
 function createPanel(context: vscode.ExtensionContext, folderUri: vscode.Uri, viewColumn: vscode.ViewColumn = vscode.ViewColumn.Active) {
   const panel = vscode.window.createWebviewPanel(
     viewType,
@@ -40,7 +176,7 @@ function createPanel(context: vscode.ExtensionContext, folderUri: vscode.Uri, vi
       localResourceRoots: [vscode.Uri.file(path.parse(folderUri.fsPath).root)]
     }
   );
-
+  
   panel.iconPath = new vscode.ThemeIcon('layout');
 
   handleWebviewMessage(panel, context);
@@ -60,31 +196,8 @@ function handleWebviewMessage(panel: vscode.WebviewPanel, context: vscode.Extens
         }
         break;
 
-      case 'chooseFolder':
-        // 1. 跳出 VS Code 原生選擇視窗
-        const folders = await vscode.window.showOpenDialog({
-            canSelectFiles: false,
-            canSelectFolders: true,
-            openLabel: 'Select Folder'
-        });
-
-        // 2. 如果使用者有選資料夾
-        if (folders && folders[0]) {
-            const selectedFolder = folders[0];
-            
-            // 3. 更新 Title
-            panel.title = `📂 ${path.basename(selectedFolder.fsPath)}`;
-            
-            // 4. *** 這裡就是共用邏輯 ***
-            // 我們呼叫跟 openPath 一樣的函式來更新畫面
-            await updateWebviewContent(panel, selectedFolder);
-        }
-        break;
-
-      // *** 新增：處理 Split 指令 ***
       case 'split':
         if (message.path) {
-            // 在旁邊開啟一個新的 Panel，顯示相同的路徑
             createPanel(context, vscode.Uri.file(message.path), vscode.ViewColumn.Beside);
         }
         break;
@@ -137,7 +250,7 @@ function handleWebviewMessage(panel: vscode.WebviewPanel, context: vscode.Extens
   });
 }
 
-// ... (New File/Folder/Delete/Rename/Copy functions remain the same) ...
+// ... 輔助功能區 (New File/Folder/Delete/Rename/Copy) 保持不變 ...
 async function performNewFile(folderPath: string, panel: vscode.WebviewPanel) {
     try {
         const fileName = await vscode.window.showInputBox({ placeHolder: 'New File Name', prompt: 'Enter the name of the new file' });
@@ -204,9 +317,7 @@ async function performCopy(sourcePath: string, targetFolder: string, panel: vsco
     } catch (error) { vscode.window.showErrorMessage(`Paste failed: ${error}`); }
 }
 
-// 序列化器
 class BetterFileDirectorySerializer implements vscode.WebviewPanelSerializer {
-  // 接收 context
   constructor(private context: vscode.ExtensionContext) {}
 
   async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
@@ -217,17 +328,18 @@ class BetterFileDirectorySerializer implements vscode.WebviewPanelSerializer {
       localResourceRoots: [vscode.Uri.file(path.parse(folderPath).root)]
     };
     
-    // 正確傳遞 context，這樣恢復的視窗也能正常運作
     handleWebviewMessage(webviewPanel, this.context); 
-    
     await updateWebviewContent(webviewPanel, vscode.Uri.file(folderPath));
   }
 }
 
+// *** 關鍵修改：以 Object (Map) 形式讀取設定 ***
 async function updateWebviewContent(panel: vscode.WebviewPanel, folderUri: vscode.Uri) {
   try {
     const result = await vscode.workspace.fs.readDirectory(folderUri);
     const config = vscode.workspace.getConfiguration('better-file-directory');
+    
+    // 直接讀取 Object，無需再從陣列轉換
     const iconConfig: IconConfig = {
         customFolderIcons: config.get('customFolderIcons') || {},
         customFileIcons: config.get('customFileIcons') || {},

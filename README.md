@@ -69,8 +69,12 @@ Access these via the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 
 ## ⚙️ Extension Settings
 
-Customize your icons in `settings.json`:
+You can customize icons using the UI or by editing `settings.json`.
 
+**Via UI:**
+Go to Settings (`Ctrl+,`) and search for "Better File Directory". You can now use the "Add Item" button to easily map keys to icon names.
+
+**Via JSON:**
 ```json
 {
   "better-file-directory.customFolderIcons": {
@@ -86,6 +90,12 @@ Customize your icons in `settings.json`:
   }
 }
 ```
+
+## 🆕 Recent Updates
+
+### [0.0.10] - 2026-02-05
+- **Settings UI Upgrade**: Refactored configuration settings (favoriteFolders, customFolderIcons, etc.) to use a Key-Value Map structure. This enables the native "Add Item" interface in VS Code Settings, making it much easier to add and manage paths/icons without editing JSON manually.
+- **Command Enhancement**: The better-file-directory.open command now supports passing a URI or string argument, allowing for integration with keybindings or other automation tools.
 
 ## 📌 Requirements
 VS Code Version: 1.90.0 or higher.
