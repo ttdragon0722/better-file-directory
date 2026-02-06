@@ -2,6 +2,21 @@
 
 All notable changes to the "Better-File-Directory" extension will be documented in this file.
 
+## [0.0.12] - 2026-02-06
+### Added
+- **Reveal in File Explorer**: Added a new navigation button to the editor title bar and explorer view.
+    - Click inside the webview to reveal the current sub-directory.
+    - Click from the explorer view to reveal the workspace root.
+    - Added full support for the Command Palette (`Ctrl+Shift+P`).
+
+### Fixed
+- **Layout**: Fixed a CSS Grid layout issue where large vertical gaps appeared between rows when the window height was large (adjusted `align-content`).
+- **Icons**: Fixed an issue where the "Reveal" command icon was not displaying correctly.
+- **Command Registration**: Fixed missing `category` in `package.json` that prevented commands from appearing in the quick pick menu.
+
+## [0.0.11] - 2026-02-06
+- Bug fixed.
+
 ## [0.0.10] - 2026-02-05
 ### Changed
 - **Settings UI Upgrade**: Refactored configuration settings (favoriteFolders, customFolderIcons, etc.) to use a Key-Value Map structure. This enables the native "Add Item" interface in VS Code Settings, making it much easier to add and manage paths/icons without editing JSON manually.

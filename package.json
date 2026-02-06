@@ -6,7 +6,7 @@
   "author": "Rex Lai",
   "license": "MIT",
   "icon": "icon.png",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "engines": {
     "vscode": "^1.90.0"
   },
@@ -23,7 +23,11 @@
   "activationEvents": [
     "onCommand:better-file-directory.current",
     "onCommand:better-file-directory.open",
-    "onWebviewPanel:betterFileDirectory"
+    "onCommand:better-file-directory.split",
+    "onCommand:better-file-directory.openFavorite",
+    "onCommand:better-file-directory.addFavorite",
+    "onWebviewPanel:betterFileDirectory",
+    "onCommand:better-file-directory.revealCurrentInOS"
   ],
   "repository": {
     "type": "git",
@@ -36,7 +40,7 @@
         "command": "better-file-directory.current",
         "title": "Open Better File View",
         "category": "Better File Directory",
-        "icon": "$(layout)"
+        "icon": "$(folder-opened)"
       },
       {
         "command": "better-file-directory.open",
@@ -58,14 +62,25 @@
         "title": "Add to Favorites",
         "category": "Better File Directory",
         "icon": "$(plus)"
+      },
+      {
+        "command": "better-file-directory.revealCurrentInOS",
+        "title": "Reveal in File Explorer",
+        "category": "Better File Directory",
+        "icon": "$(default-view-icon)"
       }
     ],
     "menus": {
       "view/title": [
         {
+          "command": "better-file-directory.revealCurrentInOS",
+          "when": "view == workbench.explorer.fileView",
+          "group": "navigation@1"
+        },
+        {
           "command": "better-file-directory.current",
           "when": "view == workbench.explorer.fileView",
-          "group": "navigation"
+          "group": "navigation@2"
         }
       ],
       "explorer/context": [
@@ -79,6 +94,7 @@
           "when": "explorerResourceIsFolder",
           "group": "navigation@2"
         }
+        
       ]
     },
     "configuration": {

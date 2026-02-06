@@ -6,11 +6,39 @@ import { getHtmlForWebview, getMaterialIconUrl, IconConfig } from './view';
 
 const viewType = 'betterFileDirectory';
 let clipboardSourcePath: string | undefined = undefined;
+const panelPaths = new WeakMap<vscode.WebviewPanel, string>();
+let activePanel: vscode.WebviewPanel | undefined = undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerWebviewPanelSerializer(viewType, new BetterFileDirectorySerializer(context))
   );
+  let revealInOSCmd = vscode.commands.registerCommand('better-file-directory.revealCurrentInOS', async () => {
+    
+    let targetPath: string | undefined;
+
+    // 邏輯判斷：
+    // 1. 如果 Webview 是「正如火如荼使用中 (Focused/Active)」，代表使用者是點擊「Webview 標題列」上的按鈕
+    //    這時我們應該開啟 Webview 裡面的路徑。
+    if (activePanel && activePanel.active && panelPaths.has(activePanel)) {
+        targetPath = panelPaths.get(activePanel);
+    } 
+    
+    // 2. 如果 Webview 不是焦點 (例如使用者點擊了側邊欄 Explorer)，
+    //    或者根本沒有 Webview，則預設開啟「工作區根目錄 (Workspace Root)」。
+    if (!targetPath) {
+        if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+            targetPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        }
+    }
+
+    // 執行開啟動作
+    if (targetPath) {
+        await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(targetPath));
+    } else {
+        vscode.window.showWarningMessage('No folder or workspace is currently open.');
+    }
+  });
 
   // *** 修改：增強版 current 指令 ***
   // 1. 支援右鍵選單傳入 uri
@@ -162,7 +190,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  context.subscriptions.push(currentCmd, openCmd, openFavCmd, addFavCmd);
+  context.subscriptions.push(currentCmd, openCmd, openFavCmd, addFavCmd,revealInOSCmd);
 }
 
 function createPanel(context: vscode.ExtensionContext, folderUri: vscode.Uri, viewColumn: vscode.ViewColumn = vscode.ViewColumn.Active) {
@@ -177,7 +205,7 @@ function createPanel(context: vscode.ExtensionContext, folderUri: vscode.Uri, vi
     }
   );
   
-  panel.iconPath = new vscode.ThemeIcon('layout');
+  panel.iconPath = new vscode.ThemeIcon('folder-opened');
 
   handleWebviewMessage(panel, context);
   updateWebviewContent(panel, folderUri);

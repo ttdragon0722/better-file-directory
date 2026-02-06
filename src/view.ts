@@ -146,7 +146,7 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
       .chip:hover { opacity: 0.8; }
       .divider { margin: 0 5px; color: var(--vscode-descriptionForeground); }
       
-      .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; padding-bottom: 20px; min-height: 50vh; }
+      .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; padding-bottom: 20px; }
       
       .card { background-color: var(--vscode-editor-inactiveSelectionBackground); border-radius: 8px; padding: 10px; height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; cursor: pointer; border: 2px solid transparent; overflow: hidden; }
       .card:hover { background-color: var(--vscode-list-hoverBackground); transform: translateY(-2px); transition: transform 0.1s; }

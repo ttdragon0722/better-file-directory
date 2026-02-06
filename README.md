@@ -1,11 +1,14 @@
 # 📂 Better File Directory
+![Version](https://img.shields.io/badge/version-0.0.12-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 [English](./README.md) | [繁體中文](./README.zh-TW.md) 
 
 **Better File Directory** is a modern visual file management extension for VS Code. It replaces the standard list view with an intuitive **Grid Layout**, featuring large thumbnails and rich **Material Design icons**, making it easier for developers to manage project assets and organize files visually.
 
-![Explorer](./Explorer.png)
-![DEMO](./DEMO.png)
+![DEMO_VIDEO](./demo/demo.gif)
+![DEMO](./demo/DEMO.png)
+
 
 ---
 
@@ -13,11 +16,14 @@
 
 * **🖼️ Visual Grid Layout**: View files and folders as elegant cards instead of dense lists.
 * **🖼️ Instant Thumbnails**: Automatically generates previews for image files.
+* **📂 System Integration**: Instantly reveal the current directory in your OS file explorer via the title bar button.
 * **🖱️ Intuitive Drag & Drop**: Copy files easily by dragging them between different split views or folders.
 * **✂️ Full Clipboard Support**: Native support for `Ctrl+C` (Copy) and `Ctrl+V` (Paste).
 * **⚡ Quick Action Menu**: Create, rename, or delete items via a customized context menu.
 * **🔀 Split View Mode**: Press `Ctrl + \` to instantly open a side-by-side pane for efficient file transfer.
 * **🎨 Custom Icons**: Customize folder and extension icons via VS Code settings.
+
+![split](./demo/split.gif)
 
 ---
 
@@ -27,6 +33,11 @@
 * **Enter Folder**: Double-click a folder card or select it and press `Enter`.
 * **Open File**: Double-click a file card to open it in the VS Code editor.
 * **Breadcrumbs**: Use the navigation chips at the top (e.g., `src` / `components`) to quickly jump back to parent directories.
+* **Reveal in OS**: Click the "Open Folder" icon in the top-right title bar.
+    * **In Webview**: Opens the specific sub-folder you are currently viewing.
+    * **In Sidebar**: Opens the workspace root directory.
+
+![Explorer](./demo/Explorer.png)
 
 ### 2. Management (Context Menu)
 Right-click on any item or the background:
@@ -36,10 +47,12 @@ Right-click on any item or the background:
 * **Rename**: Rename the selected item (Shortcut: `F2`).
 * **Delete**: Move the item to Trash (Shortcut: `Delete`).
 
+![function](./demo/function.png)
+
 ### 3. Drag and Drop
 * **Cross-view Copy**: Drag a card and drop it into another "Better File Directory" window to copy.
 * **Quick Duplicate**: Drag and drop slightly within the same view to create a copy (e.g., `image_copy.png`).
-
+![drag](./demo/drag.png)
 ---
 
 ## ⌨️ Keyboard Shortcuts
@@ -54,6 +67,7 @@ Right-click on any item or the background:
 | **Delete** | Move to Trash |
 | **Ctrl / Cmd + \\** | Open in Split View |
 
+
 ---
 
 ## 🛠️ Commands
@@ -64,6 +78,9 @@ Access these via the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 | :--- | :--- | :--- |
 | `better-file-directory.current` | **View Current Folder** | Open the grid view for the active workspace root |
 | `better-file-directory.open` | **Open Folder View...** | Choose any folder to open in the grid view |
+| `better-file-directory.revealCurrentInOS` | **Reveal in File Explorer** | Open the current folder in the OS file manager |
+
+![commands](./demo/commands.png)
 
 ---
 
@@ -77,17 +94,17 @@ Go to Settings (`Ctrl+,`) and search for "Better File Directory". You can now us
 **Via JSON:**
 ```json
 {
-  "better-file-directory.customFolderIcons": {
-    "my-api": "folder-api",
-    "private-docs": "folder-secure"
-  },
-  "better-file-directory.customExtensionIcons": {
-    "xyz": "react",
-    "data": "database"
-  },
-  "better-file-directory.customFileIcons": {
-    "special.config": "settings"
-  }
+  "better-file-directory.customFolderIcons": {
+    "my-api": "folder-api",
+    "private-docs": "folder-secure"
+  },
+  "better-file-directory.customExtensionIcons": {
+    "xyz": "react",
+    "data": "database"
+  },
+  "better-file-directory.customFileIcons": {
+    "special.config": "settings"
+  }
 }
 ```
 
