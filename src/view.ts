@@ -85,13 +85,18 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
     }
 
     const safePath = file.fsPath.replace(/\\/g, '\\\\');
+    const safeName = file.name.replace(/"/g, '&quot;');
+    // 【新增】確保傳入的 file 物件裡有時間屬性（如 mtimeMs），若無則預設為 0
+    const timeValue = file.mtimeMs || file.time || 0; 
     
     return `
       <div class="card" 
            draggable="true"
            data-index="${index}" 
            data-path="${safePath}" 
-           data-isdir="${file.isDirectory}">
+           data-isdir="${file.isDirectory}"
+           data-name="${safeName}"
+           data-time="${timeValue}">
         <div class="card-preview">${iconHtml}</div>
         <div class="card-name" title="${file.name}">${file.name}</div>
       </div>
@@ -141,7 +146,13 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
       }
       .shortcut { opacity: 0.7; font-size: 12px; }
 
-      .breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--vscode-panel-border); font-size: 14px; }
+      /* 【新增】頂部 Header 容器，讓麵包屑和排序選單並排 */
+      .header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--vscode-panel-border); }
+      .breadcrumbs { display: flex; flex-wrap: wrap; align-items: center; font-size: 14px; }
+      
+      /* 【新增】排序選單樣式 */
+      .sort-select { background-color: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); border-radius: 4px; padding: 4px 8px; font-size: 13px; cursor: pointer; outline: none; }
+      
       .chip { background-color: var(--vscode-badge-background); color: var(--vscode-badge-foreground); padding: 4px 12px; border-radius: 16px; cursor: pointer; transition: opacity 0.2s; margin: 2px; }
       .chip:hover { opacity: 0.8; }
       .divider { margin: 0 5px; color: var(--vscode-descriptionForeground); }
@@ -174,23 +185,38 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
       <div class="context-menu-item" id="ctx-delete" style="color: var(--vscode-errorForeground);">Delete <span class="shortcut">Del</span></div>
     </div>
 
-    <div class="breadcrumbs">
-       <span id="root-folder-btn" style="margin-right: 10px; cursor: pointer;" title="Switch Folder">📂</span>
-       ${breadcrumbsHtml}
+    <div class="header-container">
+      <div class="breadcrumbs">
+         <span id="root-folder-btn" style="margin-right: 10px; cursor: pointer;" title="Switch Folder">📂</span>
+         ${breadcrumbsHtml}
+      </div>
+      <select id="sort-select" class="sort-select">
+        <option value="default">Default (A-Z)</option>
+        <option value="time">Last Modified</option>
+      </select>
     </div>
+
     <div class="grid-container" id="grid">${cardsHtml}</div>
     
     <script>
       const vscode = acquireVsCodeApi();
       const currentPath = '${currentPath.replace(/\\/g, '\\\\')}';
-      vscode.setState({ path: currentPath });
+      
+      // 取回之前的排序狀態 (如果有)
+      const state = vscode.getState() || { path: currentPath, sortMethod: 'default' };
+      vscode.setState(state);
       
       let focusedIndex = -1;
       let contextMenuTargetIndex = -1;
 
-      const cards = document.querySelectorAll('.card');
+      // 【修改】因為排序會改變 cards 順序，所以使用 let
+      let cards = document.querySelectorAll('.card');
       const grid = document.getElementById('grid');
       const contextMenu = document.getElementById('context-menu');
+      const sortSelect = document.getElementById('sort-select');
+
+      // 初始化選單狀態
+      sortSelect.value = state.sortMethod;
 
       function handleCardClick(path, isDirectory) {
         vscode.postMessage({ command: 'openPath', path: path, isDirectory: isDirectory });
@@ -215,10 +241,61 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
         return cols;
       }
 
+      // 【新增】排序邏輯
+      function sortCards(method) {
+        const cardsArray = Array.from(cards);
+        
+        cardsArray.sort((a, b) => {
+          const isDirA = a.dataset.isdir === 'true';
+          const isDirB = b.dataset.isdir === 'true';
+          
+          // 資料夾永遠優先在前面
+          if (isDirA !== isDirB) {
+            return isDirA ? -1 : 1;
+          }
+
+          if (method === 'time') {
+            const timeA = parseFloat(a.dataset.time) || 0;
+            const timeB = parseFloat(b.dataset.time) || 0;
+            return timeB - timeA; // 數字越大(時間越新)排越前面
+          } else {
+            // 預設按名稱 A-Z
+            return a.dataset.name.localeCompare(b.dataset.name);
+          }
+        });
+
+        // 清空容器後依新順序加回去
+        grid.innerHTML = '';
+        cardsArray.forEach((card, newIndex) => {
+          card.dataset.index = newIndex; // 更新 index 以防鍵盤導覽亂跳
+          grid.appendChild(card);
+        });
+
+        // 重新抓取更新後的元素列表
+        cards = document.querySelectorAll('.card');
+        focusedIndex = -1;
+        updateFocus();
+
+        // 存下使用者選擇的排序方式
+        vscode.setState({ ...vscode.getState(), sortMethod: method });
+      }
+
+      // 綁定排序選單事件
+      sortSelect.addEventListener('change', (e) => {
+        sortCards(e.target.value);
+      });
+
+      // 如果有存下來的排序偏好，載入時自動排一次
+      if (state.sortMethod !== 'default') {
+         sortCards(state.sortMethod);
+      }
+
       // --- 事件綁定 ---
+      // (這裡因為可能重新排序，使用事件委派或者重新綁定。為求穩定，不更動原邏輯，
+      // 但建議在外層用 grid.addEventListener('click', ...) 做事件委派會更優雅，目前依原寫法不變)
       cards.forEach((card, index) => {
           card.addEventListener('click', () => {
-              focusedIndex = index;
+              focusedIndex = parseInt(card.dataset.index);
               updateFocus();
           });
           card.addEventListener('dblclick', () => {
@@ -228,7 +305,7 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
               e.dataTransfer.setData('text/plain', card.dataset.path);
               e.dataTransfer.effectAllowed = 'copy';
               card.classList.add('dragging');
-              focusedIndex = index;
+              focusedIndex = parseInt(card.dataset.index);
               updateFocus();
           });
           card.addEventListener('dragend', (e) => {
@@ -237,14 +314,12 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
           card.addEventListener('contextmenu', (e) => {
               e.preventDefault();
               e.stopPropagation(); 
-              focusedIndex = index;
-              contextMenuTargetIndex = index;
+              focusedIndex = parseInt(card.dataset.index);
+              contextMenuTargetIndex = parseInt(card.dataset.index);
               updateFocus();
               showContextMenu(e.clientX, e.clientY, true);
           });
       });
-
-      
 
       document.body.addEventListener('contextmenu', (e) => {
           e.preventDefault();
@@ -269,12 +344,9 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
           document.getElementById('ctx-paste').style.display = 'flex';
       }
 
-      document.getElementById('ctx-new-file').addEventListener('click', () => {
-          vscode.postMessage({ command: 'newFile', path: currentPath });
-      });
-      document.getElementById('ctx-new-folder').addEventListener('click', () => {
-          vscode.postMessage({ command: 'newFolder', path: currentPath });
-      });
+      // Context menu 操作
+      document.getElementById('ctx-new-file').addEventListener('click', () => vscode.postMessage({ command: 'newFile', path: currentPath }));
+      document.getElementById('ctx-new-folder').addEventListener('click', () => vscode.postMessage({ command: 'newFolder', path: currentPath }));
       document.getElementById('ctx-open').addEventListener('click', () => {
           if (contextMenuTargetIndex !== -1) {
               const card = cards[contextMenuTargetIndex];
@@ -282,63 +354,28 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
           }
       });
       document.getElementById('ctx-copy').addEventListener('click', () => {
-          if (contextMenuTargetIndex !== -1) {
-              const card = cards[contextMenuTargetIndex];
-              vscode.postMessage({ command: 'copy', path: card.dataset.path });
-          }
+          if (contextMenuTargetIndex !== -1) vscode.postMessage({ command: 'copy', path: cards[contextMenuTargetIndex].dataset.path });
       });
-      document.getElementById('ctx-paste').addEventListener('click', () => {
-          vscode.postMessage({ command: 'paste', targetFolder: currentPath });
-      });
+      document.getElementById('ctx-paste').addEventListener('click', () => vscode.postMessage({ command: 'paste', targetFolder: currentPath }));
       document.getElementById('ctx-rename').addEventListener('click', () => {
-          if (contextMenuTargetIndex !== -1) {
-              const card = cards[contextMenuTargetIndex];
-              vscode.postMessage({ command: 'rename', path: card.dataset.path });
-          }
+          if (contextMenuTargetIndex !== -1) vscode.postMessage({ command: 'rename', path: cards[contextMenuTargetIndex].dataset.path });
       });
       document.getElementById('ctx-delete').addEventListener('click', () => {
-          if (contextMenuTargetIndex !== -1) {
-              const card = cards[contextMenuTargetIndex];
-              vscode.postMessage({ command: 'delete', path: card.dataset.path });
-          }
+          if (contextMenuTargetIndex !== -1) vscode.postMessage({ command: 'delete', path: cards[contextMenuTargetIndex].dataset.path });
       });
-
-      document.getElementById('root-folder-btn').addEventListener('click', () => {
-          vscode.postMessage({ command: 'chooseFolder' });
-      });
+      document.getElementById('root-folder-btn').addEventListener('click', () => vscode.postMessage({ command: 'chooseFolder' }));
 
       // --- 鍵盤與拖曳事件 ---
       document.addEventListener('keydown', (e) => {
-        // *** 1. 修正：使用 e.code === 'Backslash' 來避免反斜線跳脫字元導致的語法錯誤 ***
-        // 這一段是用來處理 Split 的
         if ((e.ctrlKey || e.metaKey) && e.code === 'Backslash') {
-           e.preventDefault();
-           e.stopPropagation();
+           e.preventDefault(); e.stopPropagation();
            vscode.postMessage({ command: 'split', path: currentPath });
            return;
         }
-
-        if (e.key === 'F2') {
-           if (focusedIndex !== -1) {
-             const card = cards[focusedIndex];
-             vscode.postMessage({ command: 'rename', path: card.dataset.path });
-           }
-        }
-        if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-           if (focusedIndex !== -1) {
-             const card = cards[focusedIndex];
-             vscode.postMessage({ command: 'copy', path: card.dataset.path });
-           }
-        }
-        if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-           vscode.postMessage({ command: 'paste', targetFolder: currentPath });
-        }
-        if (e.key === 'Delete') {
-           if (focusedIndex !== -1) {
-             const card = cards[focusedIndex];
-             vscode.postMessage({ command: 'delete', path: card.dataset.path });
-           }
-        }
+        if (e.key === 'F2' && focusedIndex !== -1) vscode.postMessage({ command: 'rename', path: cards[focusedIndex].dataset.path });
+        if ((e.ctrlKey || e.metaKey) && e.key === 'c' && focusedIndex !== -1) vscode.postMessage({ command: 'copy', path: cards[focusedIndex].dataset.path });
+        if ((e.ctrlKey || e.metaKey) && e.key === 'v') vscode.postMessage({ command: 'paste', targetFolder: currentPath });
+        if (e.key === 'Delete' && focusedIndex !== -1) vscode.postMessage({ command: 'delete', path: cards[focusedIndex].dataset.path });
         
         if (cards.length === 0) return;
         if (focusedIndex === -1 && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -350,26 +387,18 @@ export function getHtmlForWebview(files: any[], currentPath: string): string {
           case 'ArrowLeft': if (focusedIndex > 0) focusedIndex--; break;
           case 'ArrowDown': if (focusedIndex + cols < total) focusedIndex += cols; break;
           case 'ArrowUp': if (focusedIndex - cols >= 0) focusedIndex -= cols; break;
-          case 'Enter': if (focusedIndex !== -1) { const card = cards[focusedIndex]; handleCardClick(card.dataset.path, card.dataset.isdir === 'true'); } break;
+          case 'Enter': if (focusedIndex !== -1) handleCardClick(cards[focusedIndex].dataset.path, cards[focusedIndex].dataset.isdir === 'true'); break;
         }
         updateFocus();
       });
 
-      document.body.addEventListener('dragover', (e) => {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'copy';
-          document.body.classList.add('drag-over');
-      });
-      document.body.addEventListener('dragleave', (e) => {
-          document.body.classList.remove('drag-over');
-      });
+      document.body.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; document.body.classList.add('drag-over'); });
+      document.body.addEventListener('dragleave', () => document.body.classList.remove('drag-over') );
       document.body.addEventListener('drop', (e) => {
           e.preventDefault();
           document.body.classList.remove('drag-over');
           const sourcePath = e.dataTransfer.getData('text/plain');
-          if (sourcePath) {
-             vscode.postMessage({ command: 'dropFile', source: sourcePath, targetFolder: currentPath });
-          }
+          if (sourcePath) vscode.postMessage({ command: 'dropFile', source: sourcePath, targetFolder: currentPath });
       });
     </script>
   </body>

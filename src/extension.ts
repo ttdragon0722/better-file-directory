@@ -362,6 +362,7 @@ class BetterFileDirectorySerializer implements vscode.WebviewPanelSerializer {
 }
 
 // *** 關鍵修改：以 Object (Map) 形式讀取設定 ***
+// * 關鍵修改：以 Object (Map) 形式讀取設定，並加入讀取檔案時間 (mtime) *
 async function updateWebviewContent(panel: vscode.WebviewPanel, folderUri: vscode.Uri) {
   try {
     const result = await vscode.workspace.fs.readDirectory(folderUri);
@@ -374,17 +375,32 @@ async function updateWebviewContent(panel: vscode.WebviewPanel, folderUri: vscod
         customExtensionIcons: config.get('customExtensionIcons') || {}
     };
 
-    const files = result.map(([name, type]) => {
+    // 【修改】因為需要抓取檔案時間，改用 Promise.all 與 async map
+    const files = await Promise.all(result.map(async ([name, type]) => {
       const isDirectory = type === vscode.FileType.Directory;
       const isImage = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(name);
       const filePath = vscode.Uri.joinPath(folderUri, name);
       const webviewUri = panel.webview.asWebviewUri(filePath).toString();
       const fsPath = filePath.fsPath;
       const iconUrl = getMaterialIconUrl(name, isDirectory, iconConfig);
-      return { name, isDirectory, isImage, webviewUri, fsPath, iconUrl };
-    });
+      
+      // 【新增】取得檔案的詳細資訊 (包含修改時間 mtime)
+      let mtimeMs = 0;
+      try {
+          const stat = await vscode.workspace.fs.stat(filePath);
+          mtimeMs = stat.mtime; // 取得修改時間的毫秒數
+      } catch (e) {
+          console.warn(`無法取得 ${name} 的時間資訊`, e);
+      }
 
+      // 將 mtimeMs 一起回傳給前端
+      return { name, isDirectory, isImage, webviewUri, fsPath, iconUrl, mtimeMs };
+    }));
+
+    // 先做基礎分類排序：資料夾在最上面
     files.sort((a, b) => (a.isDirectory === b.isDirectory ? 0 : a.isDirectory ? -1 : 1));
     panel.webview.html = getHtmlForWebview(files, folderUri.fsPath);
-  } catch (error) { vscode.window.showErrorMessage(`讀取失敗: ${error}`); }
+  } catch (error) { 
+      vscode.window.showErrorMessage(`讀取失敗: ${error}`); 
+  }
 }

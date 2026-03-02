@@ -2,6 +2,21 @@
 
 All notable changes to the "Better-File-Directory" extension will be documented in this file.
 
+## [0.0.13] - 2026-02-10
+### Added
+- Directory Sorting: Introduced a new sorting dropdown in the navigation bar.
+
+  - Default (A-Z): Keep your files organized alphabetically.
+
+  - Last Modified: Quickly find your most recently edited files and folders.
+
+- Persistent Sort State: Your preferred sorting method is now remembered even when switching between folders or restarting the webview.
+- File Metadata Support: Enhanced the backend to fetch file statistics (mtime), enabling accurate time-based sorting.
+
+### Changed
+  - UI Localization: Updated sorting options to standard English terminology for a more consistent VS Code experience.
+  - Performance Optimization: Refactored directory reading logic using Promise.all for faster metadata retrieval.
+
 ## [0.0.12] - 2026-02-06
 ### Added
 - **Reveal in File Explorer**: Added a new navigation button to the editor title bar and explorer view.
